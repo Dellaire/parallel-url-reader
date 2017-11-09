@@ -7,7 +7,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Component;
@@ -25,11 +27,17 @@ public class FirstLevelUrlReader
 
 	private ConcurrentMap<String, Long> urlCounts = new ConcurrentHashMap<String, Long>();
 
+	private final RestTemplate restTemplate;
+
+	@Autowired
+	public FirstLevelUrlReader(RestTemplateBuilder restTemplateBuilder)
+	{
+		this.restTemplate = restTemplateBuilder.build();
+	}
+
 	public ConcurrentMap<String, Long> readUrls(String url)
 	{
-		RestTemplate restTemplate = new RestTemplate();
-
-		String content = restTemplate.exchange(url, HttpMethod.GET, HttpEntity.EMPTY, String.class).getBody();
+		String content = this.restTemplate.exchange(url, HttpMethod.GET, HttpEntity.EMPTY, String.class).getBody();
 
 		List<String> firstLevelUrls = UrlExtractor.extractUrls(content);
 		firstLevelUrls.forEach(firstLevelUrl -> this.updateUrlCounts(firstLevelUrl));
