@@ -26,3 +26,6 @@ GET http://localhost:8080/url/read?url=https://en.wikipedia.org/wiki/Europe
 Accept: application/json
 
 When callig this endpoint, an output file will be created as well.
+
+
+http://localhost:8080/urls?rootUrl=https%3A%2F%2Fde.wikipedia.org%2Fwiki%2FMax_Fechner&depth=1
