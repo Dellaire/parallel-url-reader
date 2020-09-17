@@ -35,7 +35,7 @@ public class NodeProcessor {
 			this.foundUrls = this.findUrls(url);
 
 			foundUrls.keySet().forEach(aUrl -> {
-				this.childNodes.add(new NodeProcessor(aUrl, this::collectUrls, depth + 1, maxDepth));
+				this.childNodes.add(NodeProcessor.create(aUrl, this::collectUrls, depth + 1, maxDepth));
 			});
 
 		} else {
