@@ -18,7 +18,7 @@ import org.springframework.web.client.RestTemplate;
 public class NodeProcessor {
 
 	private String url;
-	private Map<String, Long> foundUrls = new ConcurrentHashMap<>();
+	private Map<String, Integer> foundUrls = new ConcurrentHashMap<>();
 
 	private final Logger logger = LoggerFactory.getLogger(NodeProcessor.class);
 
@@ -29,7 +29,7 @@ public class NodeProcessor {
 		if (depth <= maxDepth) {
 
 			this.foundUrls = this.findUrls(url);
-			
+
 			List<Future<NodeProcessor>> childNodes = new ArrayList<>();
 
 			foundUrls.keySet().forEach(aUrl -> {
@@ -48,7 +48,7 @@ public class NodeProcessor {
 		}
 	}
 
-	private Map<String, Long> findUrls(String url) {
+	private Map<String, Integer> findUrls(String url) {
 
 		RestTemplate restTemplate = RestTemplateFactory.createRestTemplate();
 		ResponseEntity<String> htmlResponse = null;
@@ -59,7 +59,7 @@ public class NodeProcessor {
 			logger.warn(e.toString());
 		}
 
-		Map<String, Long> foundUrls = new ConcurrentHashMap<>();
+		Map<String, Integer> foundUrls = new ConcurrentHashMap<>();
 		if (htmlResponse != null && htmlResponse.getStatusCode().is2xxSuccessful()) {
 
 			String htmlContent = htmlResponse.getBody();
@@ -67,12 +67,11 @@ public class NodeProcessor {
 			List<String> uncleanHrefs = Arrays.asList(htmlContent.split("href=\""));
 			List<String> urls = uncleanHrefs.stream()
 					.map(href -> href.substring(0, href.indexOf("\"") > 0 ? href.indexOf("\"") : 0))
-					.filter(href -> href.startsWith("http"))
-					.collect(Collectors.toList());
+					.filter(href -> href.startsWith("http")).collect(Collectors.toList());
 
 			urls.add(url);
 			urls.forEach(foundUrl -> {
-				foundUrls.merge(foundUrl, 1L, (v1, v2) -> v1 + v2);
+				foundUrls.merge(foundUrl, 1, (v1, v2) -> v1 + v2);
 			});
 		}
 
@@ -82,7 +81,7 @@ public class NodeProcessor {
 	private void collectUrls(NodeProcessor childNode) {
 
 		childNode.getFoundUrls().entrySet().forEach(entry -> {
-			this.foundUrls.merge(entry.getKey(), 1L, (v1, v2) -> v1 + v2);
+			this.foundUrls.merge(entry.getKey(), 1, (v1, v2) -> v1 + v2);
 		});
 	}
 
@@ -90,7 +89,7 @@ public class NodeProcessor {
 		return url;
 	}
 
-	public Map<String, Long> getFoundUrls() {
+	public Map<String, Integer> getFoundUrls() {
 		return this.foundUrls;
 	}
 }
