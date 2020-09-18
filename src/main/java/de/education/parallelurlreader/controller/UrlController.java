@@ -2,6 +2,7 @@ package de.education.parallelurlreader.controller;
 
 import java.util.concurrent.ExecutionException;
 
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -13,14 +14,15 @@ import de.education.parallelurlreader.urlreader.NodeProcessor;
 @RequestMapping("/urls")
 public class UrlController {
 
-	@GetMapping
+	@GetMapping(produces = MediaType.TEXT_PLAIN_VALUE)
 	public String findSubUrls(@RequestParam String rootUrl, @RequestParam Integer depth)
 			throws InterruptedException, ExecutionException {
 
-		NodeProcessor nodeProcessor = NodeProcessor.create(rootUrl, np -> {
-		}, 0, depth).get();
+		NodeProcessor nodeProcessor = new NodeProcessor("root", rootUrl, 0, depth);
 
-		return nodeProcessor.getFoundUrls().entrySet().stream().map(es -> es.getKey() + " --- " + es.getValue() + "\n")
+		String resultString = nodeProcessor.getFoundUrls().entrySet().stream().map(es -> es.getKey() + " --- " + es.getValue() + "\n")
 				.reduce("", (s1, s2) -> s1 + s2 + "");
+		
+		return resultString;
 	}
 }

@@ -7,7 +7,6 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -19,34 +18,34 @@ import org.springframework.web.client.RestTemplate;
 public class NodeProcessor {
 
 	private String url;
-	private Consumer<NodeProcessor> finished;
 	private Map<String, Long> foundUrls = new ConcurrentHashMap<>();
-	private List<NodeProcessor> childNodes = new ArrayList<>();;
 
 	private final Logger logger = LoggerFactory.getLogger(NodeProcessor.class);
 
-	public NodeProcessor(String url, Consumer<NodeProcessor> finishedNotification, Integer depth, Integer maxDepth) {
+	public NodeProcessor(String key, String url, Integer depth, Integer maxDepth) {
 
 		this.url = url;
-		this.finished = finishedNotification;
 
 		if (depth <= maxDepth) {
 
 			this.foundUrls = this.findUrls(url);
+			
+			List<Future<NodeProcessor>> childNodes = new ArrayList<>();
 
 			foundUrls.keySet().forEach(aUrl -> {
-				this.childNodes.add(NodeProcessor.create(aUrl, this::collectUrls, depth + 1, maxDepth));
+				childNodes.add(CompletableFuture.supplyAsync(() -> {
+					return new NodeProcessor("", aUrl, depth + 1, maxDepth);
+				}));
 			});
 
-		} else {
-			this.finished.accept(this);
+			childNodes.forEach(childNode -> {
+				try {
+					this.collectUrls(childNode.get());
+				} catch (Exception e) {
+					logger.error(e.getMessage());
+				}
+			});
 		}
-	}
-
-	public static Future<NodeProcessor> create(String url, Consumer<NodeProcessor> finishedNotification, Integer depth,
-			Integer maxDepth) {
-
-		return CompletableFuture.supplyAsync(() -> new NodeProcessor(url, finishedNotification, depth, maxDepth));
 	}
 
 	private Map<String, Long> findUrls(String url) {
@@ -54,10 +53,10 @@ public class NodeProcessor {
 		RestTemplate restTemplate = RestTemplateFactory.createRestTemplate();
 		ResponseEntity<String> htmlResponse = null;
 		try {
-			logger.info("Visiting " + url);
+			logger.debug("Visiting " + url);
 			htmlResponse = restTemplate.exchange(url, HttpMethod.GET, null, String.class);
 		} catch (Exception e) {
-			logger.error(e.getMessage());
+			logger.warn(e.toString());
 		}
 
 		Map<String, Long> foundUrls = new ConcurrentHashMap<>();
@@ -68,6 +67,7 @@ public class NodeProcessor {
 			List<String> uncleanHrefs = Arrays.asList(htmlContent.split("href=\""));
 			List<String> urls = uncleanHrefs.stream()
 					.map(href -> href.substring(0, href.indexOf("\"") > 0 ? href.indexOf("\"") : 0))
+					.filter(href -> href.startsWith("http"))
 					.collect(Collectors.toList());
 
 			urls.add(url);
@@ -84,11 +84,6 @@ public class NodeProcessor {
 		childNode.getFoundUrls().entrySet().forEach(entry -> {
 			this.foundUrls.merge(entry.getKey(), 1L, (v1, v2) -> v1 + v2);
 		});
-
-		this.childNodes.remove(childNode);
-		if (this.childNodes.isEmpty()) {
-			this.finished.accept(this);
-		}
 	}
 
 	public String getUrl() {
