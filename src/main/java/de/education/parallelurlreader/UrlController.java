@@ -22,7 +22,7 @@ public class UrlController {
 	public UrlCountSummary getUrlsAsJson(@RequestParam String rootUrl, @RequestParam Integer depth)
 			throws InterruptedException, ExecutionException {
 
-		NodeProcessor nodeProcessor = new NodeProcessor("root", rootUrl, 0, depth);
+		NodeProcessor nodeProcessor = new NodeProcessor(rootUrl, 0, depth);
 
 		return new UrlCountSummary(nodeProcessor);
 	}
@@ -30,7 +30,7 @@ public class UrlController {
 	@GetMapping(produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
 	public byte[] getUrlsAsFile(@RequestParam String rootUrl, @RequestParam Integer depth) throws Exception {
 
-		UrlCountSummary summary = new UrlCountSummary(new NodeProcessor("root", rootUrl, 0, depth));
+		UrlCountSummary summary = new UrlCountSummary(new NodeProcessor(rootUrl, 0, depth));
 
 		return this.objectMapper.writeValueAsBytes(summary);
 	}

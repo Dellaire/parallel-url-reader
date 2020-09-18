@@ -22,7 +22,7 @@ public class NodeProcessor {
 
 	private final Logger logger = LoggerFactory.getLogger(NodeProcessor.class);
 
-	public NodeProcessor(String key, String url, Integer depth, Integer maxDepth) {
+	public NodeProcessor(String url, Integer depth, Integer maxDepth) {
 
 		this.url = url;
 
@@ -34,7 +34,7 @@ public class NodeProcessor {
 
 			foundUrls.keySet().forEach(aUrl -> {
 				childNodes.add(CompletableFuture.supplyAsync(() -> {
-					return new NodeProcessor("", aUrl, depth + 1, maxDepth);
+					return new NodeProcessor(aUrl, depth + 1, maxDepth);
 				}));
 			});
 
