@@ -4,7 +4,7 @@ The _Parallel Url Reader_ performs a `GET` request to a given URL and parses the
 
 ## Retrieving a JSON as response
 
-A call could look lie this:
+A call could look like this:
 ```
 curl "http://localhost:8080/urls?rootUrl=https%3A%2F%2Fde.wikipedia.org%2Fwiki%2FWikipedia:Hauptseite&depth=1"
 ```

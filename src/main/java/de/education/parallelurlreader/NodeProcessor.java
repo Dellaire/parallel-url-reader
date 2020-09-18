@@ -1,4 +1,4 @@
-package de.education.parallelurlreader.urlreader;
+package de.education.parallelurlreader;
 
 import java.util.ArrayList;
 import java.util.Arrays;

@@ -3,8 +3,6 @@ package de.education.parallelurlreader;
 import java.util.ArrayList;
 import java.util.List;
 
-import de.education.parallelurlreader.urlreader.NodeProcessor;
-
 public class UrlCountSummary {
 
 	private List<UrlCount> urlCounts = new ArrayList<>();
